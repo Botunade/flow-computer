@@ -80,9 +80,15 @@ void readSensors() {
 
   // Example: Temp transmitter is 0 to 150 Celsius
   gas_temp = mapFloat(volts2, 0.66, 3.3, 0.0, 150.0);
+
+  Serial.println("--- SENSORS ---");
+  Serial.printf("Static Pressure: %.2f Bar\n", static_pressure);
+  Serial.printf("Diff Pressure: %.2f Bar\n", diff_pressure);
+  Serial.printf("Gas Temp: %.2f C\n", gas_temp);
 }
 
 void setupHMI() {
+  Serial.println("Init HMI Serial Link on GPIO 16/17...");
   // Start Serial1 at 115200 baud rate.
   // We will use GPIO 16 (RX) and GPIO 17 (TX) to connect to the Sunton screen.
   Serial1.begin(115200, SERIAL_8N1, 16, 17);
@@ -105,8 +111,8 @@ void communicateWithHMI() {
   Serial1.println(tx_buffer);
 
   // Print to your laptop for debugging so you can see what is being sent
-  // Serial.print("Sent to HMI: ");
-  // Serial.println(tx_buffer);
+  Serial.print("[TX to HMI]: ");
+  Serial.println(tx_buffer);
 
 
   // ==========================================
@@ -119,10 +125,13 @@ void communicateWithHMI() {
     String incomingMessage = Serial1.readStringUntil('\n');
     incomingMessage.trim(); // Remove any invisible spaces or return carriages
 
+    Serial.print("[RX from HMI]: ");
+    Serial.println(incomingMessage);
+
     // Example: If the operator hits the "Zero Totalizer" button, the screen sends "<ZERO_TOT>"
     if (incomingMessage == "<ZERO_TOT>") {
       totalizer = 0.0;
-      Serial.println("Totalizer reset by HMI command.");
+      Serial.println("[SYSTEM]: Totalizer reset by HMI command.");
     }
 
     // You can add more listeners here later for saving new Orifice or Pipe diameters
@@ -133,11 +142,15 @@ void calculateFlow() {
   // Run the AGA-3 or basic volumetric math using current readings and calibration settings
   // Add to Totalizer
   // Pass variables to TinyML AI model to check for drift/anomalies
+  Serial.println("--- FLOW MATH ---");
+  Serial.printf("Calculated Flow: %.2f\n", flow_rate);
+  Serial.printf("Updated Totalizer: %.0f\n", totalizer);
 }
 
 void logToSDCard() {
   // Get time from RTC
   // Append a new CSV line: Date, Time, Static, DP, Temp, Flow
+  Serial.println("[SYSTEM]: Appending log row to SD Card...");
 }
 
 
